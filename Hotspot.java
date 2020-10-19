@@ -1,8 +1,8 @@
 /*
-    COMP2230 Programming Assignment
+    COMP2230 Coding Assignment
     Author: Shaan Arora C3236359
     Hotspot.java
-    This class and objects of this class will act as vertices for a graph
+    Objects of this class represent verticies in a graph
  */
 public class Hotspot
 {

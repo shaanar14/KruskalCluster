@@ -82,13 +82,14 @@ public class kcluster
                         }
                     }
                 }
+                //Add the temporary Hotspot object which is acting as a vertex of a graph to a temporary list
                 hotspots.add(temp);
             }
+            //Pass that temporary list of verticies to a Graph object
             Graph g = new Graph(hotspots);
-            System.out.println("The weighted graph of hotspots:\n");
-            g.calcDistances();
+            System.out.println("The weighted graph of hotspots:");
             System.out.println(g);
-            System.out.printf("There are %d number of hotspots\n", g.getVertexCount());
+            System.out.printf("\nThere are %d number of hotspots\n", g.getVertexCount());
             System.out.printf("You have requested %d temporary fire stations", tempStations);
         }
         catch (FileNotFoundException e)

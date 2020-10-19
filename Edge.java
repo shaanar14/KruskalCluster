@@ -1,9 +1,12 @@
-import java.text.DecimalFormat;
+/*
+    COMP2230 Coding Assignment
+    Author: Shaan Arora C3236359
+    Edge.java
+    Objects of this class represent weighted edges of a graph
+ */
 
 public class Edge implements Comparable<Edge>
 {
-    //Formatting so that the weight of an edge is to two decimal places
-    final DecimalFormat df = new DecimalFormat("0.00");
     //The source vertex of the edge which will be a Hotspot object
     private Hotspot source;
     //The desination vertex of an edge which will be a Hotspot object
@@ -79,7 +82,7 @@ public class Edge implements Comparable<Edge>
     public String toString()
     {
         StringBuilder output = new StringBuilder();
-        String o = String.format("%d  %d  %.2f", this.getSource().getID(), this.getDestination().getID(), this.getWeight());
+        String o = String.format("Edge: %d  %d  %.2f\n", this.getSource().getID(), this.getDestination().getID(), this.getWeight());
         output.append(o);
         return output.toString();
     }

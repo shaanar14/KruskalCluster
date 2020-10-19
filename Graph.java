@@ -1,11 +1,10 @@
 /*
-    COMP2230 Programming Assignment
+    COMP2230 Coding Assignment
     Author: Shaan Arora C3236359
     Graph.java
-    Stores a set of Hotspot objects which will act as verticies and a set of edges which will connect Hotspot objects
+    Using Edge and Hotspot objects to represent a connect graph and display the weights of all edges in a matrix
  */
 
-import java.util.Arrays;
 import java.util.LinkedList;
 
 public class Graph
@@ -18,10 +17,8 @@ public class Graph
     private LinkedList<Hotspot> vertices;
     //Collection of all edges in a graph
     private LinkedList<Edge> edges;
-    //Weights between vertices even though some may not have edges connected to them
-    //so if we have [1][2] that will have the distance between hotspot 1 and 2
-    private double[][] distances;
-
+    //StringBuilder so we can build the output as we connect edges
+    private final StringBuilder output;
 
     //Default Constructor
     public Graph()
@@ -30,6 +27,7 @@ public class Graph
         this.edgeCount = 0;
         this.vertices = new LinkedList<>();
         this.edges = new LinkedList<>();
+        this.output = new StringBuilder();
     }
 
     //Parameter Constructor
@@ -37,42 +35,12 @@ public class Graph
     {
         this.vertices = v;
         this.vertexCount = this.vertices.size();
-        this.distances = new double[this.vertexCount][this.vertexCount];
         this.edges = new LinkedList<>();
+        this.output = new StringBuilder();
         //Creates Edge object which connects out vertices together
         this.connectEdges();
         //Now that we connect the vertices and create edges we can set the number of edges
         this.edgeCount = this.edges.size();
-    }
-
-    public void calcDistances()
-    {
-        for(int i = 0; i < this.vertices.size(); i++)
-        {
-            this.distances[i][0] = this.getVertex(i).getID();
-            for(int j = 0; j < this.vertices.size(); j++)
-            {
-                Hotspot iH, jH;
-                iH = this.getVertex(i);
-                jH = this.getVertex(j);
-                this.distances[i][j] = this.calcDistance(iH, jH);
-            }
-        }
-    }
-
-    //Calculate the distance between two vertices/Hotspots regardless if an edge connects them
-    private double calcDistance(Hotspot h1, Hotspot h2)
-    {
-        assert h1 != null && h2 != null;
-        //x1, y1 will come from h1 and x2 and y2 will come from h2
-        //sub calculation for (x2 - x1) squared
-        double resultX = (h2.getX() - h1.getX()) * (h2.getX() - h1.getX());
-        //sub calculation for (y2 - y1) squared
-        double resultY = (h2.getY() - h1.getY()) * (h2.getY() - h1.getY());
-        //final calculation of the formula
-        double result =  Math.sqrt(resultX + resultY);
-        //rounding to two decimal places
-        return Math.round(result * 100.0) / 100.0;
     }
 
     //Preconditions:  vertices.size() !=0 and edges.size() !=0
@@ -81,33 +49,56 @@ public class Graph
     {
         //Ensure that the we do have vertices and edges for the graph
         assert (this.vertices.size() != 0) || (this.edges.size() != 0) : "No vertices or edges";
+        //Anytime you see -4 or -5 in String.format() thats for padding and the - is for left alignment
         for(int i = 0; i < this.vertices.size(); i++)
         {
-            //Create and connect edges to vertices and vertices to edges
-            Edge e;
-            if(i+1 == this.vertices.size())
+            for(int j = 0; j < this.vertices.size(); j++)
             {
-                e = new Edge(this.getVertex(i), this.getVertex(i-1));
+                //if j has completed a loop then we want to add a new line character to our output to achieve the desired format
+                if(j == 0) this.output.append("\n");
+                //If i and j are the same we skip because we do not want an a vertex to have an edge connected to itself
+                //  more specifically we do not want cycles
+                if(j == i)
+                {
+                    //since we do not want an Edge connect a vertex to itself I simply just add a 0 for the weight to the output
+                    this.output.append(String.format("%-5d", 0));
+                    //continue the loop
+                    continue;
+                }
+                //Create a new Edge object with its source being the vertex at index i and the destiantion at index j of the list of verticies
+                //The weight of the edge is automatically calculated when a new Edge object is created
+                Edge e = new Edge(this.getVertex(i), this.getVertex(j));
+                //Now for that vertex at index i in the list of verticies which is the source of the edge, create a reference to that edge
+                this.getVertex(i).setEdge(e);
+                //check if the weight of the edge is a whole number
+                if(e.getWeight() % 1 == 0)
+                {
+                    //remove the decimal values since its a whole number to make output tidier e.g. if weight = 5.00, the output will just be 5
+                    this.output.append(String.format("%-5d", (int)e.getWeight()));
+                }
+                else{this.output.append(String.format("%-4.2f ", e.getWeight()));}
+                //Add the newly created edge to the list of edges
+                this.edges.add(e);
             }
-            else
-            {
-                e = new Edge(this.getVertex(i), this.getVertex(i+1));
-            }
-            this.edges.add(e);
-            this.getVertex(i).setEdge(e);
         }
     }
 
     //Getters
+
+    //Preconditions:  Graph has been declared and initalized
+    //Postconditions: Returns the number of verticies in the graph, can return 0
     public int getVertexCount() {return this.vertexCount;}
 
+    //Preconditions:  Graph has been declared and initialized
+    //Postconditions: Returns the number of edges in the graph, can return 0
     public int getEdgeCount() {return this.edgeCount;}
 
-    public LinkedList<Edge> getEdges() {return this.edges;}
-
-    public double[][] getDistances()
+    //Preconditions:  The parameter constructor on a Graph object has been used
+    //Postconditions: Returns a LinkedList of Edge objects which represents a list of all edges in the graph
+    public LinkedList<Edge> getEdges()
     {
-        return this.distances;
+        assert this.edgeCount > 0 && this.edges != null;
+        return this.edges;
     }
 
     //Wrapper function to make things neater
@@ -124,28 +115,8 @@ public class Graph
     @Override
     public String toString()
     {
-        StringBuilder output = new StringBuilder();
-        for(int i = 0; i < this.vertices.size(); i++)
-        {
-            for(int j = 0; j < this.vertices.size(); j++)
-            {
-                String o = String.valueOf(this.distances[i][j]);
-                //For formatting, if we have a decimal
-                if(o.matches("\\d\\.[0]"))
-                {
-                    int parse = (int) this.distances[i][j];
-                    String p = String.valueOf(parse);
-                    p = String.format("%-4s", p);
-                    output.append(p);
-                }
-                else
-                {
-                    output.append(o);
-                }
-                output.append(" ");
-            }
-            output.append("\n");
-        }
-        return output.toString();
+        //Make sure we at least have two verticies and at least one edge
+        assert this.vertices.size() > 2 || this.edges.size() > 1;
+        return this.output.toString();
     }
 }
