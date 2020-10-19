@@ -68,14 +68,21 @@ public class Edge implements Comparable<Edge>
     //Postconditions: Returns the weight of the current Edge object
     public double getWeight() {return this.weight;}
 
-    //For the return values of this funciton I am following the documentation which means:
-    //  if(edge1.weight > edge2.weight) return 1
-    //  if(edge1.weight < edge2.weight) return -1
+    //  if(edge1.weight < edge2.weight) return 1
+    //  if(edge1.weight > edge2.weight) return -1
     //  if(edge1.weight == edge2.weight) return 0
     @Override
     public int compareTo(Edge e)
     {
-        return Double.compare(this.getWeight(), e.getWeight());
+        if(this.getWeight() < e.getWeight())
+        {
+            return -1;
+        }
+        if(this.getWeight() == e.getWeight())
+        {
+            return 0;
+        }
+        return 1;
     }
 
     @Override

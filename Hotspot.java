@@ -26,6 +26,15 @@ public class Hotspot
         this.edge = null;
     }
 
+    //Single Parameter Constructor for ID
+    public Hotspot(int i)
+    {
+        this.id = i;
+        this.x = 0.0;
+        this.y = 0.0;
+        this.edge = null;
+    }
+
     //Parameter Constructor
     public Hotspot(int i, double x, double y, Edge e)
     {
