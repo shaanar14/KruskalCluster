@@ -93,6 +93,10 @@ public class kcluster
             System.out.printf("\nThere are %d number of hotspots\n", g.getVertexCount());
             System.out.printf("You have requested %d temporary fire stations\n", tempStations);
             clusters.kruskalMST();
+            for(Graph c : clusters.getClusters())
+            {
+                clusters.calcCentroid(c);
+            }
         }
         catch (FileNotFoundException e)
         {

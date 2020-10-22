@@ -5,18 +5,20 @@
     Using Edge and Hotspot objects to represent a connect graph and display the weights of all edges in a matrix
  */
 
+import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.ListIterator;
 
 public class Graph
 {
     //The number of vertices in a graph
-    private final int vertexCount;
+    private int vertexCount;
     //The number of edges in a graph
-    private final int edgeCount;
+    private int edgeCount;
     //Collection of all vertices in a graph
-    private LinkedList<Hotspot> vertices;
+    private final LinkedList<Hotspot> vertices;
     //Collection of all edges in a graph
-    private LinkedList<Edge> edges;
+    private final LinkedList<Edge> edges;
     //StringBuilder so we can build the output as we connect edges
     private final StringBuilder output;
 
@@ -39,6 +41,10 @@ public class Graph
         this.output = new StringBuilder();
         //Creates Edge object which connects out vertices together
         this.connectEdges();
+        //Update the Edge reference in each vertex
+        this.assignEdges();
+        //Remove all duplicate edges in the graph
+        this.removeDuplicateEdges();
         //Now that we connect the vertices and create edges we can set the number of edges
         this.edgeCount = this.edges.size();
     }
@@ -47,8 +53,8 @@ public class Graph
     //Postconditions: Creates Edge objects to connect the Hotspot objects which are acting as our vertices
     private void connectEdges()
     {
-        //Ensure that the we do have vertices and edges for the graph
-        assert (this.vertices.size() != 0) || (this.edges.size() != 0) : "No vertices or edges";
+        //Ensure that the we do have vertices for the graph
+        assert this.vertexCount != 0 : "No vertices so the graph cannot be connected";
         //Anytime you see -4 or -5 in String.format() thats for padding and the - is for left alignment
         for(int i = 0; i < this.vertices.size(); i++)
         {
@@ -68,8 +74,6 @@ public class Graph
                 //Create a new Edge object with its source being the vertex at index i and the destiantion at index j of the list of verticies
                 //The weight of the edge is automatically calculated when a new Edge object is created
                 Edge e = new Edge(this.getVertex(i), this.getVertex(j));
-                //Now for that vertex at index i in the list of verticies which is the source of the edge, create a reference to that edge
-                this.getVertex(i).setEdge(e);
                 //check if the weight of the edge is a whole number
                 if(e.getWeight() % 1 == 0)
                 {
@@ -83,11 +87,80 @@ public class Graph
         }
     }
 
+    private void assignEdges()
+    {
+        for(Hotspot v : this.vertices)
+        {
+            for(Edge e : this.edges)
+            {
+                if (e.getSource().getID() == v.getID() && e.getDestination().getID() == (v.getID() + 1))
+                {
+                    v.setEdge(e);
+                }
+                else if(v.getID() == this.vertices.size())
+                {
+                    if(e.getSource().getID() == v.getID() && e.getDestination().getID() == v.getID() - 1)
+                    {
+                        v.setEdge(e);
+                    }
+                }
+            }
+        }
+    }
+
+    //
+    private void removeDuplicateEdges()
+    {
+        for(ListIterator<Edge> iter = this.edges.listIterator(); iter.hasNext();)
+        {
+            Edge tempN = iter.next();
+            //Ignore if its the first vertex
+            if(tempN.getSource().getID() == 1) continue;
+            //I know this looks ugly sorry
+            //If the source of the edge is the last vertex then delete that edge
+            else if(tempN.getSource().getID() - 1 == tempN.getDestination().getID() ||
+                    tempN.getSource().getID() - 2 == tempN.getDestination().getID() ||
+                    tempN.getSource().getID() - 3 == tempN.getDestination().getID() ||
+                    tempN.getSource().getID() == 5)
+            {
+                //Remove the edge
+                iter.remove();
+            }
+        }
+        System.out.println(this.edges.size());
+    }
+
+
+    public void addVertex(Hotspot v)
+    {
+        this.vertices.add(v);
+        this.vertexCount = this.vertices.size();
+    }
+
+    public void addEdge(Edge e)
+    {
+        this.edges.add(e);
+        this.edgeCount = this.edges.size();
+    }
+
+
+
     //Getters
 
     //Preconditions:  Graph has been declared and initalized
     //Postconditions: Returns the number of verticies in the graph, can return 0
     public int getVertexCount() {return this.vertexCount;}
+
+    //Wrapper function to make things neater
+    //takes an integer and returns the Hotspot object at that index in vertices
+    public Hotspot getVertex(int i)
+    {
+        //make sure we do not have an empty list of vertices
+        assert this.vertices.size() != 0;
+        return this.vertices.get(i);
+    }
+
+    public LinkedList<Hotspot> getVertices() {return this.vertices;}
 
     //Preconditions:  Graph has been declared and initialized
     //Postconditions: Returns the number of edges in the graph, can return 0
@@ -99,15 +172,6 @@ public class Graph
     {
         assert this.edgeCount > 0 && this.edges != null;
         return this.edges;
-    }
-
-    //Wrapper function to make things neater
-    //takes an integer and returns the Hotspot object at that index in vertices
-    public Hotspot getVertex(int i)
-    {
-        //make sure we do not have an empty list of vertices
-        assert this.vertices.size() != 0;
-        return this.vertices.get(i);
     }
 
     //Preconditions:  vertices != null and edges != null

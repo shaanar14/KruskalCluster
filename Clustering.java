@@ -14,87 +14,158 @@ public class Clustering
     private Graph graph;
     //LinkedList of clusters, somewhere to store the final output
     private LinkedList<Graph> clusters;
-    //List of all verticies
-    private LinkedList<Hotspot> parent;
+    //index tracker
+    private int currentCluster;
+
 
     public Clustering(Graph g)
     {
         this.graph = g;
         this.clusters = new LinkedList<>();
-        this.parent = new LinkedList<>();
+        this.currentCluster = 0;
     }
 
+    //Driver function for Kruskal's Algorithm and the generation of minimum spanning trees
     public void kruskalMST()
     {
         //Queue of all the edges, which will sort them by weight
         LinkedList<Edge> queue = new LinkedList<>();
         //Add the Edges from the Graph to the queue
-        for(int i = 0; i < this.graph.getEdgeCount(); i++)
+        for(int i = 0; i < this.graph.getVertexCount(); i++)
         {
-            queue.add(this.graph.getEdges().get(i));
+            queue.add(this.graph.getVertices().get(i).getEdge());
         }
         Collections.sort(queue);
+        int [] parent = new int[graph.getVertexCount()];
         //Start the algorithm with makeSet()
-        this.makeSet();
+        this.makeSet(parent);
+        //Lits of all the edges in the minimum spanning tree
         LinkedList<Edge> mst = new LinkedList<>();
+        //Any edges that are not added to the minimum spanning tree are stored here
+        LinkedList<Edge> leftOverEdges = new LinkedList<>();
         int index = 0;
-        while(index < this.graph.getVertexCount())
+        while(index < this.graph.getVertexCount() - 1)
         {
+            //this was added as a result of if statement before x and y
+            if(queue.isEmpty()) break;
+            //Grab the first edge from the queue and capture it in a temporary Edge object
             Edge temp = queue.removeFirst();
-            int x = this.findSet(temp.getSource().getID());
-            int y = this.findSet(temp.getDestination().getID());
-            if (x == y)
+            //Had to include this check other wise had index issues with my parent array
+            //I think the issue is that array index starts at 0 where as the ID's of the Hotspots start at 1
+            if(temp.getDestination().getID() == this.graph.getVertexCount() || temp.getSource().getID() == this.graph.getVertexCount())
             {
-                //ignore do not want to make cycle
+                leftOverEdges.add(temp);
             }
-            mst.add(temp);
-            index++;
-            unionSets(x, y);
-            //ignore, otherwise we will create a cycle
+            else
+            {
+                //Capture the results of findSet on the source of the edge and the destination of the edge
+                int x = this.findSet(parent, temp.getSource().getID());
+                int y = this.findSet(parent, temp.getDestination().getID());
+                //If x & y are not equal then add the edge to our minimum spanning tree, increment the index and perform a union on x & y
+                if (x != y)
+                {
+                    mst.add(temp);
+                    index++;
+                    unionSets(parent, x, y);
+                }
+            }
         }
-        for(Edge e : mst) System.out.println(e.getSource());
+        //Generate Clusters
+        this.createCluster(mst);
+        this.createCluster(leftOverEdges);
     }
+
+    public void createCluster(LinkedList<Edge> edges)
+    {
+        Graph newCluster = new Graph();
+        for(Edge e : edges)
+        {
+            newCluster.addVertex(e.getSource());
+            newCluster.addEdge(e);
+        }
+        this.clusters.add(newCluster);
+    }
+
+
+
+    //Clustering Distance Functions
+
+    //Calculates the inter - clustering distance which is the minimum distance between any two items belonging to two different clusters
+    //public double calcInterCD()
+
+    //Calculates the intra - clustering distance which is the maximum distance between any two items belonging to the same cluster
+    //public double calcIntraCD()
+
+    //Calculates the centroid of the cluster graph passed in
+    //Preconditions:  g.vertexCount != 0 && g.edgeCount != 0
+    //Postconditions: Calculates the average point in the cluster
+    //  The x-coordinate of the centroid is the average of the 𝑥-coordinates of all the points in the cluster; similarly, the 𝑦-coordinate of the centroid
+    //      is the average of the 𝑦-coordinates of all the points in the cluster.
+    public void calcCentroid(Graph g)
+    {
+        System.out.printf("\nStation %d:\n", this.clusters.indexOf(g)+1);
+        double x = 0, y = 0;
+        double[] centroid = new double[2];
+        for(Hotspot v : g.getVertices())
+        {
+            x += v.getX();
+            y += v.getY();
+        }
+        centroid[0] = x / g.getVertexCount();
+        centroid[1] = y / g.getVertexCount();
+        System.out.printf("Coordinates: (%.2f, %.2f)\n", centroid[0], centroid[1]);
+        System.out.print("Hotspots: {");
+        for(int i = 0; i < g.getVertexCount(); i++)
+        {
+            if(g.getVertex(i) == g.getVertices().getLast())
+            {
+                System.out.printf("%d}\n", g.getVertex(i).getID());
+            }
+            else
+            {
+                System.out.print(g.getVertex(i).getID());
+                System.out.print(",");
+            }
+        }
+    }
+
+    public LinkedList<Graph> getClusters() {return this.clusters;}
 
     //Disjoint Set Operational Functions
 
     //Preconditions:  None
     //Postconditions: The vertex at index i is assigned a reference to itself
-    public void makeSet()
+    public void makeSet(int [] parent)
     {
-        for(int i = 1; i <= this.graph.getVertexCount(); i++)
+        for(int i = 0; i < this.graph.getVertexCount(); i++)
         {
-            Hotspot temp = new Hotspot(i);
-            this.parent.add(temp);
+            parent[i] = i;
         }
     }
 
     //Preconditions:  None
     //Postconditions: Returns the root of the tree to which i belongs
-    public int findSet(int i)
+    public int findSet(int [] parent, int i)
     {
-        if(i == this.parent.size())
+        while(i != parent[i])
         {
-            return i;
-        }
-        if(this.parent.get(i).getID() != i)
-        {
-            return this.findSet(this.parent.get(i).getID());
+            i = parent[i];
         }
         return i;
     }
 
     //Preconditions:  None
     //Postconditions: Combines the root node of two trees by making one root a child of the other
-    public void mergeTrees(int i, int j)
-    {
-        this.parent.get(i).setID(this.parent.get(j).getID());
-    }
+    public void mergeTrees(int [] parent, int i, int j) {parent[i] = j;}
 
     //Preconditions:
     //Postconditions: Constructs a tree that represents the union of sets i and j, assuming that i and j belong to different sets
-    public void unionSets(int i, int j)
+    public void unionSets(int [] parent, int i, int j)
     {
-        this.mergeTrees(this.findSet(i), this.findSet(j));
+        int x = this.findSet(parent, i);
+        int y = this.findSet(parent, j);
+        //this.mergeTrees(parent, x, y);
+        parent[y] = parent[x];
     }
 
 }
