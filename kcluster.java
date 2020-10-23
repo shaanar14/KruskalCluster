@@ -7,7 +7,6 @@
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Scanner;
 
@@ -87,16 +86,20 @@ public class kcluster
             }
             //Pass that temporary list of verticies to a Graph object
             Graph g = new Graph(hotspots);
+            //Send the graph to be clustered
             Clustering clusters = new Clustering(g);
             System.out.println("The weighted graph of hotspots:");
+            //Display the weighted adjacency matrix of the graph
             System.out.println(g);
             System.out.printf("\nThere are %d number of hotspots\n", g.getVertexCount());
             System.out.printf("You have requested %d temporary fire stations\n", tempStations);
+            //Create minimum spanning trees and store them as clusters
             clusters.kruskalMST();
-            for(Graph c : clusters.getClusters())
-            {
-                clusters.calcCentroid(c);
-            }
+            //for each Graph object reprsenting the clusters, calculate the centroid of it which will also display
+            clusters.getClusters().forEach(clusters::calcCentroid);
+            //Inter-clustering distance
+            System.out.printf("\nInter - Clustering distance: %.2f\n", clusters.calcInterCD());
+            System.out.print("\nThank you for using Kruskal’s Clustering. Bye.\n");
         }
         catch (FileNotFoundException e)
         {

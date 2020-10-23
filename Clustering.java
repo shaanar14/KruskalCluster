@@ -14,15 +14,11 @@ public class Clustering
     private Graph graph;
     //LinkedList of clusters, somewhere to store the final output
     private LinkedList<Graph> clusters;
-    //index tracker
-    private int currentCluster;
-
 
     public Clustering(Graph g)
     {
         this.graph = g;
         this.clusters = new LinkedList<>();
-        this.currentCluster = 0;
     }
 
     //Driver function for Kruskal's Algorithm and the generation of minimum spanning trees
@@ -75,6 +71,7 @@ public class Clustering
         this.createCluster(leftOverEdges);
     }
 
+    //Creates a new Graph object using the list of edges passed in
     public void createCluster(LinkedList<Edge> edges)
     {
         Graph newCluster = new Graph();
@@ -86,15 +83,37 @@ public class Clustering
         this.clusters.add(newCluster);
     }
 
-
-
     //Clustering Distance Functions
 
-    //Calculates the inter - clustering distance which is the minimum distance between any two items belonging to two different clusters
-    //public double calcInterCD()
+    //Preconditions: clusters.size >= 2
+    //Postconditions: Returns the minimum distance between any two items belonging to two different clusters
+    public double calcInterCD()
+    {
+        assert this.clusters.size() >= 2 : "2 clusters are required to calculate the inter-clustering distance";
+        //This is way too many for loops, couldn't figure out how to use disjoint sets for this calculation
+        for(Graph g : this.clusters)
+        {
+            for(Graph c : this.clusters)
+            {
+                //if they are the same graph then break becaue do not want to do a comparison
+                if(g == c) continue;
+                for(Edge e1 : g.getEdges())
+                {
+                    for(Edge e2 : c.getEdges())
+                    {
+                        //if the destination of e1 is the same as the source of the edge of e2 then thats the edge between clusters
+                        if(e1.getDestination() == e2.getSource())
+                        {
+                            return e1.getWeight();
+                        }
+                    }
+                }
+            }
+        }
+        //if all else fails return 0
+        return 0.0;
+    }
 
-    //Calculates the intra - clustering distance which is the maximum distance between any two items belonging to the same cluster
-    //public double calcIntraCD()
 
     //Calculates the centroid of the cluster graph passed in
     //Preconditions:  g.vertexCount != 0 && g.edgeCount != 0
@@ -103,14 +122,18 @@ public class Clustering
     //      is the average of the 𝑦-coordinates of all the points in the cluster.
     public void calcCentroid(Graph g)
     {
+        //Ensure that the graph passed is actually a cluster
+        assert this.clusters.contains(g);
         System.out.printf("\nStation %d:\n", this.clusters.indexOf(g)+1);
         double x = 0, y = 0;
         double[] centroid = new double[2];
+        //Add up all the x & y coordinates for every vertex in g
         for(Hotspot v : g.getVertices())
         {
             x += v.getX();
             y += v.getY();
         }
+        //Divide the sum by the number of vertices
         centroid[0] = x / g.getVertexCount();
         centroid[1] = y / g.getVertexCount();
         System.out.printf("Coordinates: (%.2f, %.2f)\n", centroid[0], centroid[1]);
@@ -128,8 +151,6 @@ public class Clustering
             }
         }
     }
-
-    public LinkedList<Graph> getClusters() {return this.clusters;}
 
     //Disjoint Set Operational Functions
 
@@ -166,6 +187,35 @@ public class Clustering
         int y = this.findSet(parent, j);
         //this.mergeTrees(parent, x, y);
         parent[y] = parent[x];
+    }
+
+    //Setters
+
+    //Preconditions:  None
+    //Postconditions: Assigns the value of g to the private member variable graph
+    public void setGraph(Graph g) {this.graph = g;}
+
+    //Preconditions:  None
+    //Postconditions: Assigns the value of c to the private member variable clusters
+    public void setClusters(LinkedList<Graph> c) {this.clusters = c;}
+
+    //Getters
+
+    //Preconditions:  graph != null
+    //Postconditions: Returns the original Graph object that was passed in to be clustered
+    public Graph getGraph()
+    {
+        assert this.graph != null;
+        return this.graph;
+    }
+
+
+    //Preconditions:  clusters.size() != 0
+    //Postconditions: Returns a list of Graph objects that are representing the clusters
+    public LinkedList<Graph> getClusters()
+    {
+        assert this.clusters.size() != 0 : "There are no clusters";
+        return this.clusters;
     }
 
 }

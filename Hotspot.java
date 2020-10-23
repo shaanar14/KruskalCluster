@@ -4,6 +4,7 @@
     Hotspot.java
     Objects of this class represent verticies in a graph
  */
+
 public class Hotspot
 {
     //Private Member variables

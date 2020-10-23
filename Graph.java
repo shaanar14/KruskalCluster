@@ -5,7 +5,6 @@
     Using Edge and Hotspot objects to represent a connect graph and display the weights of all edges in a matrix
  */
 
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.ListIterator;
 
